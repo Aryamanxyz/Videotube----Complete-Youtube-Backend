@@ -1,8 +1,8 @@
-import mongoose, {schema} from "mongoose"
+import mongoose from "mongoose"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 
-const userSchema= new Schema(
+const userSchema= new mongoose.Schema(
     {
         username:{
             type:String,
@@ -19,7 +19,7 @@ const userSchema= new Schema(
             lowercase:true,
             trim:true,
         },
-        fullname:{
+        fullName:{
             type:String,
             required:true,
             index:true,
@@ -32,20 +32,20 @@ const userSchema= new Schema(
 
         },
         coverImage:{
-            type:string, //cloudinary url
+            type:String, //cloudinary url
         },
         watchHistory:[
             {
-                type:Schema.Types.ObjectId,
-                ref:"video"
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"Video"
             }
         ],
         password:{
-            type:string,
+            type:String,
             required:[true,'password is required']
         },
         refreshToken:{
-            type:string
+            type:String
         }
 
     },{
@@ -57,7 +57,7 @@ const userSchema= new Schema(
 userSchema.pre("save",async function(next){
     if(!this.isModified("password")) return next();
     this.password=await bcrypt.hash(this.password,10)
-    next()
+    
 })
 
 userSchema.methods.isPasswordCorrect=async function(password){
@@ -70,7 +70,7 @@ userSchema.methods.generateAccessToken=function(){
             _id:this._id,
             email:this.email,
             username:this.username,
-            fullname:this.fullname
+            fullName:this.fullName
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
@@ -83,7 +83,9 @@ userSchema.methods.generateRefreshToken=function(){
     return jwt.sign(
         {
             _id:this._id,
-            
+            email:this.email,
+            username:this.username,
+            fullName:this.fullName
         },
         process.env.REFRESH_TOKEN_SECRET,
         {
